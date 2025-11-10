@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "forgery-detection"
+version = "0.1.0"
+description = "Image forgery detection for car insurance fraud"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "forgery_detection", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+Pillow = ">=10.0.0"
+numpy = ">=1.24.0,<2.0"
+imagehash = ">=4.3.1"
+opencv-python = ">=4.8.0"
+pyyaml = ">=6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+black = "^23.7.0"
+ruff = "^0.0.280"
+
+[tool.poetry.scripts]
+detect-forgeries = "forgery_detection.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=src/forgery_detection --cov-report=term-missing"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

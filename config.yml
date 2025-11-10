@@ -1,0 +1,143 @@
+# CONFIG-TUNNED-V1.YML
+# Score aggregators: disabled reverse search, increased stat and copy move.
+
+# CLASSIFICATION THRESHOLDS
+classifier:
+  modes:
+    strict:
+      threshold: 0.7  # Precision-focused, minimize false positives
+      description: "High confidence required"
+    balanced:
+      threshold: 0.5  # Target 80% TPR / 20% FPR
+      description: "Default balanced mode"
+    aggressive:
+      threshold: 0.3  # Recall-focused, catch more fakes
+      description: "Catch more forgeries, accept more false positives"
+
+# SCORE AGGREGATION WEIGHTS
+score_aggregator:
+  # Default weights for combining detector scores
+  default_weights:
+    metadata: 0.50          # TIER 1: Editing software detection (STRONGEST SIGNAL)
+    reverse_search: 0.30    # TIER 1: Image fingerprinting (not implemented, acts as buffer)
+    ela: 0.10               # TIER 1: JPEG compression artifacts
+    statistical: 0.05       # TIER 2: Histogram/correlation anomalies (weak discriminator)
+    copy_move: 0.03         # TIER 2: Duplicate region detection (not detecting anything)
+    noise_variance: 0.02    # TIER 3: Noise consistency analysis (unreliable)
+
+# METADATA DETECTOR
+metadata_detector:
+  # Suspicion scores
+  no_exif_score: 0.4           # Image with no EXIF metadata
+  editing_software_score: 0.6  # Known editing software detected
+  few_tags_score: 0.3          # Suspiciously few EXIF tags
+  error_default_score: 0.3     # Unable to read metadata
+
+  # Thresholds
+  few_tags_threshold: 5  # <5 EXIF tags is suspicious
+
+  # Known editing software (lowercase)
+  editing_software:
+    - photoshop
+    - gimp
+    - paint.net
+    - affinity
+    - pixelmator
+    - acorn
+    - photoscape
+
+# ELA DETECTOR
+ela_detector:
+  # JPEG compression settings
+  default_quality: 90  # Quality for resaving JPEG
+  scale_factor: 15     # Scale differences for visualization
+
+  # Score calculation weights
+  weights:
+    mean: 0.3      # Mean difference weight
+    std: 0.3       # Standard deviation weight
+    variance: 0.4  # Regional variance weight (most important)
+
+  # Normalization divisors
+  normalization:
+    mean_divisor: 50.0      
+    std_divisor: 40.0       
+    variance_divisor: 100.0  
+
+  # Grid settings
+  grid_size: 4  # Divide image into 4x4 regions
+
+  # Error handling
+  error_default_score: 0.0  # Unable to perform ELA
+
+# STATISTICAL DETECTOR
+statistical_detector:
+  # Component weights
+  weights:
+    histogram: 0.4     # Histogram anomaly detection
+    correlation: 0.3   # Color channel correlation
+    edge: 0.3         # Edge density analysis
+
+  # Histogram anomaly detection
+  histogram:
+    gap_ratio_threshold: 0.3  # >30% empty bins is suspicious
+    gap_ratio_score: 0.2      # Suspicion added for gaps
+    max_peak_threshold: 0.1   # Single bin >10% of pixels
+    max_peak_score: 0.2       # Suspicion added for peaks
+    num_channels: 3           # RGB channels
+
+  # Color correlation thresholds
+  correlation:
+    very_suspicious_threshold: 0.5  # avg_corr < 0.5
+    very_suspicious_score: 0.8
+    somewhat_suspicious_threshold: 0.7  # avg_corr < 0.7
+    somewhat_suspicious_score: 0.4
+    normal_threshold: 0.7  # avg_corr >= 0.7 is normal
+
+  # Edge density analysis
+  edge:
+    std_divisor: 50.0  # Normalization divisor
+    grid_size: 3       # Divide into 3x3 regions
+
+  # Error handling
+  error_default_score: 0.0  # Unable to perform statistical analysis
+
+# COPY-MOVE DETECTOR
+copy_move_detector:
+  # ORB feature detection
+  n_features: 500           # Number of keypoints to detect
+  match_threshold: 0.75     # Lowe's ratio test threshold
+  min_distance: 50          # Min pixel distance for copy-move (not pattern)
+
+  # Score calculation
+  suspicious_matches_divisor: 20.0  # 20+ matches = score 1.0
+
+  # Visualization
+  max_visualized_matches: 20  # Limit drawn matches for clarity
+
+  # Error handling
+  error_default_score: 0.0  # Unable to detect copy-move
+
+# NOISE VARIANCE DETECTOR
+noise_variance_detector:
+  # Grid settings
+  grid_size: 4  # Divide image into 4x4 regions
+
+  # Coefficient of Variation (CV) thresholds
+  cv_thresholds:
+    high_threshold: 0.5   # CV > 0.5 (NO SOURCE: "Natural images: CV < 0.3")
+    high_score: 0.8
+    medium_threshold: 0.3  # CV > 0.3
+    medium_score: 0.4
+    low_score: 0.0        # CV <= 0.3 (normal)
+
+  # Z-score outlier detection
+  zscore:
+    threshold: 2.5  # Why 2.5 instead of standard 2.0? (NO JUSTIFICATION)
+    score: 0.6      # Suspicion for extreme outliers
+
+  # Error handling
+  error_default_score: 0.0  # Unable to analyze noise
+
+  # Visualization
+  colormap: JET  # OpenCV colormap for heatmap
