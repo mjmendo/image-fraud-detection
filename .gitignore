@@ -71,4 +71,3 @@ dmypy.json
 # Project-specific
 detect_forgeries.py.bak
 images/.gitkeep
-report*.md
