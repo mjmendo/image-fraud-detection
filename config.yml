@@ -1,6 +1,3 @@
-# CONFIG-TUNNED-V1.YML
-# Score aggregators: disabled reverse search, increased stat and copy move.
-
 # CLASSIFICATION THRESHOLDS
 classifier:
   modes:
